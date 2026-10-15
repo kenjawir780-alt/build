@@ -6,10 +6,9 @@ workflow_dispatch:
 jobs:
 build:
 runs-on: ubuntu-latest
-
 steps:
-  - name: Checkout repository
-    uses: actions/checkout@v4
+- name: Checkout repository
+uses: actions/checkout@v4
 
   - name: Set up Java
     uses: actions/setup-java@v4
@@ -37,10 +36,11 @@ steps:
 
   - name: Build debug APK
     run: |
-      PROJECT_DIR="$(dirname "$(find extracted -name gradlew -type f | head -n 1)")"
-      test -n "$PROJECT_DIR"
+      GRADLEW="$(find extracted -name gradlew -type f | head -n 1)"
+      test -n "$GRADLEW"
+      PROJECT_DIR="$(dirname "$GRADLEW")"
+      chmod +x "$GRADLEW"
       cd "$PROJECT_DIR"
-      chmod +x gradlew
       ./gradlew assembleDebug --stacktrace
 
   - name: Upload APK
