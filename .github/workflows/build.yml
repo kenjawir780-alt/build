@@ -7,40 +7,38 @@ jobs:
 build:
 runs-on: ubuntu-latest
 steps:
-- name: Checkout repository
-uses: actions/checkout@v4
+- uses: actions/checkout@v4
 
-  - name: Set up Java
-    uses: actions/setup-java@v4
+  - uses: actions/setup-java@v4
     with:
       distribution: temurin
       java-version: '17'
 
-  - name: Set up Android SDK
-    uses: android-actions/setup-android@v3
+  - uses: android-actions/setup-android@v3
 
-  - name: Install Android SDK and NDK
+  - name: Install SDK and NDK
     run: |
       sdkmanager "platforms;android-34"
       sdkmanager "build-tools;34.0.0"
       sdkmanager "ndk;24.0.8215888"
 
-  - name: Extract project
-    run: |
-      unzip -q god.zip -d extracted
-      ls -la extracted
+  - name: Extract ZIP
+    run: unzip -q god.zip -d extracted
 
-  - name: Locate Gradle project
+  - name: Find Gradle wrapper
+    id: gradle
     run: |
-      find extracted -name gradlew -type f
+      FILE="$(find extracted -type f -name gradlew | head -n 1)"
+      if [ -z "$FILE" ]; then
+        echo "gradlew tidak ditemukan"
+        exit 1
+      fi
+      echo "file=$FILE" >> "$GITHUB_OUTPUT"
 
-  - name: Build debug APK
+  - name: Build APK
     run: |
-      GRADLEW="$(find extracted -name gradlew -type f | head -n 1)"
-      test -n "$GRADLEW"
-      PROJECT_DIR="$(dirname "$GRADLEW")"
-      chmod +x "$GRADLEW"
-      cd "$PROJECT_DIR"
+      chmod +x "${{ steps.gradle.outputs.file }}"
+      cd "$(dirname "${{ steps.gradle.outputs.file }}")"
       ./gradlew assembleDebug --stacktrace
 
   - name: Upload APK
